@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dragon City — Dragon Gate</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold: #f5c842; --gold-dark: #c89b1a;
+  --purple: #7c3aed; --purple-light: #a855f7; --purple-dark: #4c1d95;
+  --bg-dark: #080614; --bg-panel: #110e2a; --bg-card: #1c1640; --bg-card2: #261f52;
+  --border-col: #35296a;
+  --text-main: #e8d8ff; --text-muted: #8a72bb;
+  --red: #ef4444; --heroic-col: #f59e0b; --mythical-col: #a855f7; --legendary-col: #f97316;
+  --r: 10px; --rlg: 16px;
+}
+
+/* ── LANDSCAPE GAME SHELL ── */
+html, body { width:100%; height:100%; overflow:hidden; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+}
+
+/* TOP BAR */
+.topbar {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(8,6,20,0.95);
+  border-bottom: 1px solid var(--border-col);
+  z-index: 10;
+}
+.topbar-logo { font-size: 15px; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; }
+.gate-tabs { display: flex; gap: 0; }
+.gate-tab {
+  padding: 5px 14px; font-size: 12px; font-weight: 700;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  color: var(--text-muted); transition: all 0.18s; white-space: nowrap;
+}
+.gate-tab:hover { color: var(--text-main); }
+.gate-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+.topbar-currencies { display: flex; gap: 10px; align-items: center; }
+.cpill {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--bg-card); border: 1px solid var(--border-col);
+  border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: 700;
+}
+.cpill.gems .amt { color: var(--gold); }
+.cpill.keys .amt { color: #a0c4ff; }
+
+/* ── MAIN GAME AREA (landscape 3-col) ── */
+.game-area {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  overflow: hidden;
+}
+
+/* ── LEFT SIDEBAR ── */
+.left-col {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 10px 10px;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border-col);
+  overflow-y: auto;
+}
+
+.gate-header { display: flex; flex-direction: column; gap: 4px; }
+.gate-title { font-size: 16px; font-weight: 800; color: #fff; }
+.gate-sub { font-size: 11px; color: var(--text-muted); }
+.gate-badge {
+  display: inline-block; padding: 2px 9px; border-radius: 10px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; width: fit-content;
+}
+.badge-heroic { background: rgba(245,158,11,0.18); color: var(--heroic-col); border: 1px solid rgba(245,158,11,0.4); }
+.badge-mythical { background: rgba(168,85,247,0.18); color: var(--mythical-col); border: 1px solid rgba(168,85,247,0.4); }
+.badge-legendary { background: rgba(249,115,22,0.18); color: var(--legendary-col); border: 1px solid rgba(249,115,22,0.4); }
+
+/* PITY */
+.pity-box {
+  background: var(--bg-card); border: 1px solid var(--border-col);
+  border-radius: var(--r); padding: 10px 12px;
+}
+.pity-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+.pity-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.pity-count { font-size: 12px; font-weight: 800; color: var(--gold); }
+.pity-track { height: 6px; background: var(--bg-dark); border-radius: 3px; overflow: hidden; }
+.pity-fill { height:100%; border-radius:3px; background: linear-gradient(90deg, var(--purple), var(--gold)); transition: width .4s ease; }
+.pity-sub { display: flex; justify-content: space-between; margin-top: 5px; font-size: 10px; color: var(--text-muted); }
+.pity-info-link { cursor: pointer; color: var(--purple-light); }
+
+/* PULL BUTTONS */
+.pull-section { display: flex; flex-direction: column; gap: 7px; }
+.pull-btn {
+  width: 100%; padding: 11px 10px; border-radius: var(--r);
+  font-size: 13px; font-weight: 800; cursor: pointer; border: none;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.14s; letter-spacing: 0.3px;
+}
+.pull-btn:active { transform: scale(0.96); }
+.pull-1x {
+  background: linear-gradient(135deg, #2a2050, #4c1d95);
+  border: 2px solid var(--purple-light); color: #fff;
+}
+.pull-1x:hover { background: linear-gradient(135deg, #3a306a, #6d28d9); }
+.pull-10x {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff; box-shadow: 0 3px 16px rgba(124,58,237,0.45);
+}
+.pull-10x:hover { box-shadow: 0 4px 22px rgba(124,58,237,0.65); }
+.pull-cost {
+  background: rgba(0,0,0,0.35); padding: 2px 7px;
+  border-radius: 10px; font-size: 11px;
+}
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border-col);
+  border-radius: var(--r); padding: 8px 4px; text-align: center;
+}
+.stat-val { font-size: 16px; font-weight: 800; color: #fff; }
+.stat-label { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+
+/* ── CENTER — CAROUSEL ── */
+.center-col {
+  position: relative;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.carousel-stage {
+  flex: 1; position: relative; overflow: hidden; cursor: pointer;
+}
+.carousel-slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.55s ease;
+  pointer-events: none;
+}
+.carousel-slide.active { opacity: 1; pointer-events: auto; }
+.carousel-slide::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:80px;
+  background: linear-gradient(to top, rgba(8,6,20,0.9), transparent);
+  pointer-events:none;
+}
+
+.slide-pips {
+  position: absolute; top: 10px; left: 14px;
+  display: flex; gap: 6px; z-index: 5;
+}
+.slide-pip {
+  width: 15px; height: 15px; border-radius: 50%;
+}
+.pip-heroic  { background: var(--heroic-col);  box-shadow: 0 0 8px rgba(245,158,11,.7); }
+.pip-mythical{ background: var(--mythical-col); box-shadow: 0 0 8px rgba(168,85,247,.7); }
+.pip-legendary{background: var(--legendary-col);box-shadow: 0 0 8px rgba(249,115,22,.7); }
+
+.slide-rbadge {
+  position: absolute; top: 10px; right: 14px;
+  width: 32px; height: 32px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 900; z-index: 5;
+}
+.slide-rbadge.heroic   { background: var(--heroic-col);   color: #3a1800; }
+.slide-rbadge.mythical { background: var(--mythical-col); color: #250042; }
+.slide-rbadge.legendary{ background: var(--legendary-col);color: #3a1000; }
+
+.slide-rec {
+  position: absolute; top: 50px; left: 14px;
+  background: var(--gold); color: #3a1800;
+  font-size: 10px; font-weight: 900; letter-spacing: 1px;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 6px; z-index: 5;
+}
+
+.slide-emoji {
+  font-size: clamp(100px, 18vw, 160px);
+  filter: drop-shadow(0 8px 32px rgba(0,0,0,0.85));
+  position: relative; z-index: 4;
+}
+
+.slide-elem-row {
+  position: absolute; bottom: 40px;
+  display: flex; gap: 2px; background: rgba(0,0,0,0.55);
+  border-radius: 20px; padding: 3px 7px; z-index: 6;
+}
+.elem-pip {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; opacity: 0.38; transition: opacity .2s;
+}
+.elem-pip.on { opacity: 1; background: rgba(255,255,255,.12); }
+
+.slide-name {
+  position: absolute; bottom: 14px; left: 0; right: 0; text-align: center;
+  font-size: 14px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+  color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.9); z-index: 6;
+}
+
+/* radial sunburst bg per slide */
+.slide-bg {
+  position: absolute; inset: 0; z-index: 0;
+}
+
+/* carousel nav dots */
+.carousel-dots {
+  flex-shrink: 0;
+  display: flex; justify-content: center; gap: 6px; padding: 6px 0;
+}
+.cdot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border-col); cursor: pointer; transition: all .2s;
+}
+.cdot.active { background: var(--gold); transform: scale(1.3); }
+
+/* pool action bar */
+.pool-actions {
+  flex-shrink: 0;
+  display: flex; gap: 8px; padding: 6px 12px 8px;
+  border-top: 1px solid var(--border-col);
+}
+.pool-action-btn {
+  flex: 1; padding: 7px; background: var(--bg-card2);
+  border: 1px solid var(--border-col); border-radius: var(--r);
+  color: var(--text-muted); font-size: 11px; cursor: pointer; transition: all .2s;
+}
+.pool-action-btn:hover { border-color: var(--purple-light); color: var(--purple-light); }
+
+/* pool count pill over carousel */
+.pool-count-pill {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: rgba(8,6,20,0.75); border: 1px solid var(--border-col);
+  border-radius: 14px; padding: 2px 10px; font-size: 11px;
+  color: var(--text-muted); z-index: 10; pointer-events: none;
+}
+
+/* ── RIGHT PANEL — HISTORY ── */
+.right-col {
+  display: flex; flex-direction: column;
+  background: var(--bg-panel); border-left: 1px solid var(--border-col);
+  overflow: hidden;
+}
+.rp-header {
+  flex-shrink: 0;
+  padding: 9px 12px; border-bottom: 1px solid var(--border-col);
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; font-weight: 700;
+}
+.clear-btn {
+  font-size: 10px; color: var(--text-muted); cursor: pointer;
+  padding: 2px 7px; border: 1px solid var(--border-col); border-radius: 5px; background: none;
+}
+.clear-btn:hover { border-color: var(--red); color: var(--red); }
+.results-area {
+  flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 7px;
+}
+.results-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; color: var(--text-muted); font-size: 13px; gap: 8px;
+}
+.results-empty .bi { font-size: 36px; opacity: 0.3; }
+
+.result-batch {
+  background: var(--bg-card); border: 1px solid var(--border-col);
+  border-radius: var(--r); padding: 8px;
+}
+.rb-header {
+  display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.rb-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 4px; }
+.ri {
+  aspect-ratio: 1; border-radius: 5px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 16px; border: 1px solid transparent;
+}
+.ri .rl { font-size: 8px; color: var(--text-muted); margin-top: 1px; line-height:1; text-align:center; }
+.ri.egg      { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.5); }
+.ri.orb-item { /* color set inline per element */ }
+
+/* ── PULL REVEAL OVERLAY ── */
+#pull-overlay {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  flex-direction: column; align-items: center; justify-content: center;
+  background: #000;
+  cursor: pointer;
+}
+#pull-overlay.show { display: flex; }
+
+/* Sunburst canvas bg */
+#pull-canvas {
+  position: absolute; inset: 0; width:100%; height:100%;
+}
+
+/* SINGLE PULL reveal */
+.single-reveal {
+  position: relative; z-index: 5;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  animation: revealPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes revealPop {
+  from { transform: scale(0.4); opacity:0; }
+  to   { transform: scale(1);   opacity:1; }
+}
+.single-hexagon {
+  width: 160px; height: 184px;
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.hex-svg { position:absolute; inset:0; width:100%; height:100%; }
+.hex-emoji { font-size: 72px; position:relative; z-index:2; filter: drop-shadow(0 4px 16px rgba(0,0,0,0.8)); }
+.single-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+.single-name  { font-size: 20px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; text-align:center; }
+.tap-hint { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 24px; letter-spacing: 1px; }
+
+/* MULTI PULL reveal (10x) */
+.multi-reveal {
+  position: relative; z-index: 5;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  animation: revealPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  width: min(90vw, 700px);
+}
+.multi-title { font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+.multi-grid {
+  display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; width: 100%;
+}
+.multi-card {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  border-radius: 10px; padding: 12px 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: cardPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes cardPop {
+  from { transform: scale(0.5) translateY(20px); opacity:0; }
+  to   { transform: scale(1)   translateY(0);    opacity:1; }
+}
+.mc-icon  { display:flex; align-items:center; justify-content:center; height:38px; }
+.mc-label { font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.mc-name  { font-size: 10px; font-weight: 700; color: #fff; text-align: center; line-height: 1.2; }
+
+/* ── MODALS ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 200;
+  align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg-panel); border: 1px solid var(--border-col);
+  border-radius: var(--rlg); width: 90%; max-width: 520px;
+  max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+}
+.modal-header {
+  padding: 13px 16px; border-bottom: 1px solid var(--border-col);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-close {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--bg-card2); border: 1px solid var(--border-col);
+  color: var(--text-muted); font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { color: var(--red); border-color: var(--red); }
+.modal-body { padding: 14px 16px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 10px 16px; border-top: 1px solid var(--border-col); display: flex; gap: 8px; justify-content: flex-end; }
+.btn-primary { padding: 8px 18px; background: var(--purple); color: #fff; border: none; border-radius: var(--r); font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-primary:hover { background: var(--purple-light); }
+.btn-secondary { padding: 8px 18px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-col); border-radius: var(--r); font-size: 13px; cursor: pointer; }
+
+/* dragon picker */
+.elem-filter { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 12px; }
+.elem-btn {
+  padding: 4px 10px; border-radius: 16px; border: 1px solid var(--border-col);
+  background: var(--bg-card); cursor: pointer; font-size: 12px;
+  transition: all .15s; color: var(--text-muted);
+}
+.elem-btn:hover { border-color: var(--purple-light); color: var(--text-main); }
+.elem-btn.active { background: var(--purple); border-color: var(--purple); color: #fff; }
+.dragon-picker-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 7px;
+  max-height: 280px; overflow-y: auto;
+}
+.picker-dragon {
+  background: var(--bg-card); border: 2px solid var(--border-col);
+  border-radius: var(--r); padding: 8px 6px; text-align: center; cursor: pointer; transition: all .2s;
+}
+.picker-dragon:hover { border-color: var(--purple-light); background: var(--bg-card2); }
+.picker-dragon.selected { border-color: var(--gold); background: rgba(245,200,66,0.07); }
+.picker-dragon .d-icon { font-size: 26px; }
+.picker-dragon .d-name { font-size: 10px; color: var(--text-muted); margin-top: 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.picker-dragon .d-rar { font-size: 9px; font-weight: 700; margin-top: 2px; }
+.d-rar.heroic   { color: var(--heroic-col);   }
+.d-rar.mythical { color: var(--mythical-col);  }
+.d-rar.legendary{ color: var(--legendary-col); }
+.sel-footer { margin-top:10px; padding-top:10px; border-top:1px solid var(--border-col); display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); }
+
+/* pool type modal */
+.pool-type-grid { display: grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+.ptb {
+  padding:12px 8px; border:2px solid var(--border-col); border-radius:var(--r);
+  background:var(--bg-card); cursor:pointer; text-align:center; transition:all .2s;
+}
+.ptb:hover { border-color: var(--purple-light); }
+.ptb.selected { border-color: var(--gold); background: rgba(245,200,66,0.05); }
+.ptb .ptb-icon { font-size:26px; margin-bottom:5px; }
+.ptb .ptb-name { font-size:12px; font-weight:700; }
+.ptb .ptb-tier { font-size:10px; color:var(--text-muted); margin-top:2px; }
+
+/* pity rewards */
+.pity-rewards { display:flex; flex-direction:column; gap:7px; }
+.pity-rrow { display:flex; align-items:center; gap:10px; padding:9px; background:var(--bg-card); border-radius:var(--r); }
+.pity-rrow .pri { font-size:22px; }
+.pity-rrow .prn { font-size:12px; font-weight:700; }
+.pity-rrow .prd { font-size:10px; color:var(--text-muted); margin-top:1px; }
+
+/* notif */
+.notif {
+  position: fixed; top:54px; right:14px;
+  background: var(--bg-panel); border:1px solid var(--border-col);
+  border-radius:var(--r); padding:8px 14px; font-size:12px; z-index:600;
+  transform:translateX(120%); transition:transform .3s ease; max-width:220px;
+}
+.notif.show { transform:translateX(0); }
+.notif.gold   { border-color:var(--gold);         color:var(--gold);         }
+.notif.purple { border-color:var(--purple-light);  color:var(--purple-light); }
+.notif.red    { border-color:var(--red);           color:var(--red);          }
+
+/* scrollbar */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-thumb { background:var(--border-col); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">🐉 Dragon Gate</div>
+  <div class="gate-tabs">
+    <div class="gate-tab active" data-gate="heroic"    onclick="switchGate('heroic')">Heroic Gate</div>
+    <div class="gate-tab"        data-gate="mythical"  onclick="switchGate('mythical')">Mythical Gate</div>
+    <div class="gate-tab"        data-gate="legendary" onclick="switchGate('legendary')">Legendary Gate</div>
+  </div>
+  <div class="topbar-currencies">
+    <div class="cpill gems">💎 <span class="amt" id="gems-count">1,442</span></div>
+    <div class="cpill keys">🔑 <span class="amt" id="keys-count">99,999</span></div>
+  </div>
+</div>
+
+<!-- GAME AREA -->
+<div class="game-area">
+
+  <!-- LEFT: gate info + pull -->
+  <div class="left-col">
+    <div class="gate-header">
+      <div class="gate-title" id="gate-name">Heroic Gate</div>
+      <div class="gate-sub"   id="gate-sub">High-Tier Pool</div>
+      <div class="gate-badge badge-heroic" id="gate-badge">Heroic</div>
+    </div>
+
+    <div class="pity-box">
+      <div class="pity-row">
+        <span class="pity-label">🥚 Egg Pity</span>
+        <span class="pity-count"><span id="pity-val">0</span> / 40</span>
+      </div>
+      <div class="pity-track"><div class="pity-fill" id="pity-bar" style="width:0%"></div></div>
+      <div class="pity-sub">
+        <span>0 pulls</span>
+        <span class="pity-info-link" onclick="openPityModal()">ℹ️ Info</span>
+        <span>40 pulls</span>
+      </div>
+    </div>
+
+    <div class="pull-section">
+      <button class="pull-btn pull-1x"  onclick="doPull(1)">PULL 1X  <span class="pull-cost">🔑 10</span></button>
+      <button class="pull-btn pull-10x" onclick="doPull(10)">PULL 10X <span class="pull-cost">🔑 100</span></button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val" id="total-pulls">0</div><div class="stat-label">Pulls</div></div>
+      <div class="stat-card"><div class="stat-val" id="total-eggs">0</div><div class="stat-label">Eggs</div></div>
+      <div class="stat-card"><div class="stat-val" id="total-orbs">0</div><div class="stat-label">Orbs</div></div>
+    </div>
+  </div>
+
+  <!-- CENTER: carousel -->
+  <div class="center-col">
+    <div class="carousel-stage" id="carousel-stage">
+      <div class="pool-count-pill" id="pool-count">6 / 6</div>
+    </div>
+    <div class="carousel-dots" id="carousel-dots"></div>
+    <div class="pool-actions">
+      <button class="pool-action-btn" onclick="openEditPool()">✏️ Edit Pool</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: history -->
+  <div class="right-col">
+    <div class="rp-header">
+      Pull history
+      <button class="clear-btn" onclick="clearHistory()">Clear</button>
+    </div>
+    <div class="results-area" id="results-area">
+      <div class="results-empty" id="results-empty">
+        <div class="bi">🔑</div>Pull to see results
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PULL REVEAL OVERLAY -->
+<div id="pull-overlay" onclick="closePullOverlay()">
+  <canvas id="pull-canvas"></canvas>
+  <div id="pull-content"></div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<!-- EDIT POOL MODAL -->
+<div class="modal-overlay" id="edit-pool-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Edit Pool — Select Dragons</span>
+      <button class="modal-close" onclick="closeModal('edit-pool-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;padding:7px;background:var(--bg-card);border-radius:8px;">
+        ℹ️ Pool has 8 dragons per tier (24 total). Select up to 6 to add to your active carousel — orbs and eggs drop only from your 6 selected.
+      </div>
+      <div class="elem-filter" id="element-filter">
+        <button class="elem-btn active" onclick="filterElem('all',this)">All</button>
+        <button class="elem-btn" onclick="filterElem('fire',this)">🔥</button>
+        <button class="elem-btn" onclick="filterElem('water',this)">💧</button>
+        <button class="elem-btn" onclick="filterElem('nature',this)">🌿</button>
+        <button class="elem-btn" onclick="filterElem('electric',this)">⚡</button>
+        <button class="elem-btn" onclick="filterElem('dark',this)">🌑</button>
+        <button class="elem-btn" onclick="filterElem('light',this)">☀️</button>
+        <button class="elem-btn" onclick="filterElem('metal',this)">⚙️</button>
+        <button class="elem-btn" onclick="filterElem('none',this)">🚫</button>
+      </div>
+      <div class="dragon-picker-grid" id="dragon-picker-grid"></div>
+      <div class="sel-footer">
+        <span id="selection-info">0 / 6 selected</span>
+        <span style="font-size:10px">Click to toggle</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('edit-pool-modal')">Cancel</button>
+      <button class="btn-primary" onclick="confirmPoolEdit()">Confirm (<span id="sel-count">0</span>/6)</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE POOL MODAL -->
+<div class="modal-overlay" id="change-pool-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Change Pool Type</span>
+      <button class="modal-close" onclick="closeModal('change-pool-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="pool-type-grid" id="pool-type-grid">
+        <div class="ptb selected" onclick="selectPoolType('heroic',this)">
+          <div class="ptb-icon">🌟</div>
+          <div class="ptb-name" style="color:var(--heroic-col)">Heroic</div>
+          <div class="ptb-tier">High-Tier</div>
+        </div>
+        <div class="ptb" onclick="selectPoolType('mythical',this)">
+          <div class="ptb-icon">✨</div>
+          <div class="ptb-name" style="color:var(--mythical-col)">Mythical</div>
+          <div class="ptb-tier">Mid-Tier</div>
+        </div>
+        <div class="ptb" onclick="selectPoolType('legendary',this)">
+          <div class="ptb-icon">🔥</div>
+          <div class="ptb-name" style="color:var(--legendary-col)">Legendary</div>
+          <div class="ptb-tier">Base-Tier</div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--text-muted)">Changing pool type resets your dragon selection.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('change-pool-modal')">Cancel</button>
+      <button class="btn-primary" onclick="confirmPoolChange()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- PITY INFO MODAL -->
+<div class="modal-overlay" id="pity-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🥚 Guaranteed Egg Pity</span>
+      <button class="modal-close" onclick="closeModal('pity-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+        Every <strong style="color:#fff">40 pulls</strong> you're guaranteed an egg from your active pool. Pulling an egg naturally resets the counter.
+      </p>
+      <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Possible rewards</div>
+      <div class="pity-rewards" id="pity-rewards"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="closeModal('pity-modal')">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ DATA ═══════════════
+const ALL_DRAGONS = [
+  // ── HEROIC (8) ──
+  {id:1,  name:'Flametail',    icon:'🔥', element:'fire',     rarity:'heroic',   str:12500, hp:35000, abi:5},
+  {id:2,  name:'Aquadrake',    icon:'💧', element:'water',    rarity:'heroic',   str:11200, hp:38000, abi:5},
+  {id:3,  name:'Thornback',    icon:'🌿', element:'nature',   rarity:'heroic',   str:13000, hp:34000, abi:5},
+  {id:4,  name:'Thunderstrike',icon:'⚡', element:'electric', rarity:'heroic',   str:14000, hp:30000, abi:5},
+  {id:5,  name:'Shadowmere',   icon:'🌑', element:'dark',     rarity:'heroic',   str:13500, hp:36000, abi:5},
+  {id:6,  name:'Dawnbringer',  icon:'☀️', element:'light',    rarity:'heroic',   str:12000, hp:40000, abi:5},
+  {id:7,  name:'Ironjaw',      icon:'⚙️', element:'metal',    rarity:'heroic',   str:11500, hp:45000, abi:4},
+  {id:8,  name:'Pureclaw',     icon:'🐉', element:'none',     rarity:'heroic',   str:15000, hp:50000, abi:6},
+  // ── MYTHICAL (8) ──
+  {id:9,  name:'Emberwing',    icon:'🐲', element:'fire',     rarity:'mythical', str:9800,  hp:28000, abi:4},
+  {id:10, name:'Tidalwyrm',    icon:'🌊', element:'water',    rarity:'mythical', str:9400,  hp:30000, abi:4},
+  {id:11, name:'Vineveil',     icon:'🍃', element:'nature',   rarity:'mythical', str:9100,  hp:27000, abi:4},
+  {id:12, name:'Sparkwing',    icon:'✨', element:'electric', rarity:'mythical', str:9800,  hp:25000, abi:4},
+  {id:13, name:'Duskwhisper',  icon:'🦇', element:'dark',     rarity:'mythical', str:10200, hp:29000, abi:4},
+  {id:14, name:'Gleamwing',    icon:'💡', element:'light',    rarity:'mythical', str:8500,  hp:32000, abi:4},
+  {id:15, name:'Cogscale',     icon:'🔧', element:'metal',    rarity:'mythical', str:8200,  hp:35000, abi:3},
+  {id:16, name:'Voidborn',     icon:'⬛', element:'none',     rarity:'mythical', str:10000, hp:38000, abi:5},
+  // ── LEGENDARY (8) ──
+  {id:17, name:'Scorchfang',   icon:'🦅', element:'fire',     rarity:'legendary',str:7200,  hp:22000, abi:3},
+  {id:18, name:'Seafoam',      icon:'🫧', element:'water',    rarity:'legendary',str:6500,  hp:20000, abi:3},
+  {id:19, name:'Leafscale',    icon:'🌾', element:'nature',   rarity:'legendary',str:7000,  hp:21000, abi:3},
+  {id:20, name:'Zaplet',       icon:'🔌', element:'electric', rarity:'legendary',str:6800,  hp:18000, abi:3},
+  {id:21, name:'Gloomfang',    icon:'👁️',element:'dark',     rarity:'legendary',str:7800,  hp:23000, abi:3},
+  {id:22, name:'Shimmerscale', icon:'🌠', element:'light',    rarity:'legendary',str:6200,  hp:24000, abi:3},
+  {id:23, name:'Boltback',     icon:'🪛', element:'metal',    rarity:'legendary',str:6000,  hp:28000, abi:3},
+  {id:24, name:'Nullfang',     icon:'◻️', element:'none',     rarity:'legendary',str:8000,  hp:30000, abi:4},
+];
+
+const GATE_CONFIG = {
+  heroic:   {name:'Heroic Gate',   sub:'High-Tier Pool',  badge:'Heroic',   bclass:'badge-heroic',   rarity:['heroic']},
+  mythical: {name:'Mythical Gate', sub:'Mid-Tier Pool',   badge:'Mythical', bclass:'badge-mythical', rarity:['mythical']},
+  legendary:{name:'Legendary Gate',sub:'Base-Tier Pool',  badge:'Legendary',bclass:'badge-legendary',rarity:['legendary']},
+};
+const ELEM_ICONS = {fire:'🔥',water:'💧',nature:'🌿',electric:'⚡',dark:'🌑',light:'☀️',metal:'⚙️',none:'🚫'};
+const RARITY_LABEL = {heroic:'H',mythical:'M',legendary:'L'};
+const RARITY_COLORS = {heroic:'#f59e0b', mythical:'#a855f7', legendary:'#f97316'};
+const PIP_COUNTS = {heroic:4, mythical:3, legendary:2};
+
+// ═══════════════ STATE ═══════════════
+const S = {
+  gems:1442, keys:99999,
+  gate:'heroic', poolType:'heroic',
+  pool:[1,2,3,4,5,6],
+  pity:{ heroic:0, mythical:0, legendary:0 },
+  totalPulls:0, totalEggs:0, totalOrbs:0,
+  history:[],
+  pendingSel:[], pendingPoolType:'heroic', filterElem:'all',
+};
+
+// ═══════════════ SUNBURST CANVAS ═══════════════
+let sbAnim=null;
+function startSunburst(color) {
+  const canvas = document.getElementById('pull-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const cx = canvas.width/2, cy = canvas.height/2;
+  const spokes = 20;
+  let angle = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(angle);
+    const maxR = Math.sqrt(cx*cx+cy*cy)*1.5;
+    for(let i=0;i<spokes;i++) {
+      const a = (i/spokes)*Math.PI*2;
+      const a2 = a + Math.PI/spokes;
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.arc(0,0,maxR,a,a2);
+      ctx.closePath();
+      // alternate dark purple / near-black
+      ctx.fillStyle = i%2===0 ? color+'28' : '#00000055';
+      ctx.fill();
+    }
+    ctx.restore();
+    angle += 0.003;
+    sbAnim = requestAnimationFrame(draw);
+  }
+  draw();
+}
+function stopSunburst() {
+  if(sbAnim) { cancelAnimationFrame(sbAnim); sbAnim=null; }
+  const canvas = document.getElementById('pull-canvas');
+  canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);
+}
+
+// ═══════════════ ELEMENT → COLOR ═══════════════
+const ELEM_COLOR = {
+  fire:    '#f97316', water:   '#38bdf8', nature:  '#4ade80',
+  electric:'#facc15', dark:    '#a78bfa', light:   '#fde68a',
+  metal:   '#94a3b8', none:    '#e2e8f0',
+};
+
+// ═══════════════ PULL LOGIC ═══════════════
+// Each pull: first pick a random dragon from pool, then pick drop type for that dragon.
+const PULL_WEIGHTS = [{type:'egg',w:1},{type:'orbs100',w:4},{type:'orbs50',w:8},{type:'orbs10',w:12}];
+function pickDropType() {
+  const total = PULL_WEIGHTS.reduce((s,e)=>s+e.w,0);
+  let r = Math.random()*total;
+  for(const e of PULL_WEIGHTS){ r-=e.w; if(r<=0)return e.type; }
+  return 'orbs10';
+}
+function pickDragon() {
+  const pd = S.pool.map(id=>ALL_DRAGONS.find(d=>d.id===id)).filter(Boolean);
+  return pd[Math.floor(Math.random()*pd.length)];
+}
+
+function doPull(count) {
+  const cost = count*10;
+  if(S.keys<cost){ showNotif('Not enough keys! 🔑','red'); return; }
+  if(S.pool.length===0){ showNotif('Pool is empty! Add dragons first.','red'); return; }
+  S.keys -= cost; updateCurrencies();
+  const gate = S.gate;
+  const batch = [];
+  for(let i=0;i<count;i++) {
+    S.pity[gate]++; S.totalPulls++;
+    let result;
+    if(S.pity[gate]>=40) {
+      const d = pickDragon();
+      result = {type:'egg', dragon:d, isPityEgg:true};
+      S.pity[gate]=0;
+    } else {
+      const d = pickDragon();
+      const type = pickDropType();
+      result = {type, dragon:d};
+      if(type==='egg') S.pity[gate]=0;
+    }
+    if(result.type==='egg')     S.totalEggs++;
+    if(result.type==='orbs100') S.totalOrbs+=100;
+    if(result.type==='orbs50')  S.totalOrbs+=50;
+    if(result.type==='orbs10')  S.totalOrbs+=10;
+    batch.push(result);
+  }
+  S.history.unshift({count, results:batch, id:Date.now()});
+  renderAll();
+  showPullOverlay(batch, count);
+}
+
+// ═══════════════ PULL OVERLAY ═══════════════
+function orbCount(type) {
+  if(type==='orbs100') return 100;
+  if(type==='orbs50')  return 50;
+  return 10;
+}
+function resultElemColor(r) {
+  // orbs take the element color of the dragon they came from
+  return r.dragon ? (ELEM_COLOR[r.dragon.element]||'#e2e8f0') : '#e2e8f0';
+}
+// Filled circle SVG orb in a given color
+function orbSVG(color, size=32) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 32 32"><defs><radialGradient id="og${size}" cx="38%" cy="32%" r="55%"><stop offset="0%" stop-color="#fff" stop-opacity="0.55"/><stop offset="100%" stop-color="${color}" stop-opacity="1"/></radialGradient></defs><circle cx="16" cy="16" r="14" fill="url(#og${size})"/><circle cx="16" cy="16" r="14" fill="none" stroke="${color}" stroke-width="1.5" stroke-opacity="0.7"/></svg>`;
+}
+
+function showPullOverlay(batch, count) {
+  const overlay = document.getElementById('pull-overlay');
+  const content = document.getElementById('pull-content');
+  const firstEgg = batch.find(r=>r.type==='egg');
+  const dominant = firstEgg ? (firstEgg.dragon?.rarity||'heroic') : 'heroic';
+  const color = RARITY_COLORS[dominant] || '#7c3aed';
+
+  overlay.classList.add('show');
+  startSunburst(color);
+
+  if(count===1) {
+    const r = batch[0];
+    const isEgg = r.type==='egg';
+    const ec = resultElemColor(r);
+    const orbHtml = isEgg ? `<div style="font-size:72px;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.8))">🥚</div>`
+                          : `<div style="margin-bottom:4px">${orbSVG(ec,80)}</div>`;
+    const labelText = isEgg ? 'EGG DROP' : `${orbCount(r.type)} ORBS`;
+    const nameText  = isEgg
+      ? (r.dragon ? r.dragon.rarity.toUpperCase()+' '+r.dragon.name.toUpperCase() : 'EGG')
+      : (r.dragon ? r.dragon.name.toUpperCase() : '');
+    const nameColor = isEgg ? color : ec;
+    content.innerHTML = `
+      <div class="single-reveal">
+        <div class="single-hexagon">
+          <svg class="hex-svg" viewBox="0 0 160 184" fill="none">
+            <polygon points="80,2 158,46 158,138 80,182 2,138 2,46" fill="${isEgg?color:ec}22" stroke="${isEgg?color:ec}" stroke-width="3"/>
+            <polygon points="80,14 146,52 146,132 80,170 14,132 14,52" fill="${isEgg?color:ec}11" stroke="${isEgg?color:ec}88" stroke-width="1"/>
+          </svg>
+          ${orbHtml}
+        </div>
+        <div class="single-label" style="color:${isEgg?color:ec}">${labelText}</div>
+        <div class="single-name"  style="color:${nameColor}">${nameText}</div>
+        <div class="tap-hint">TAP ANYWHERE TO CONTINUE</div>
+      </div>`;
+  } else {
+    // 10x — each card shows orb in dragon's element color + dragon name below
+    let cards = batch.map((r,i)=>{
+      const isEgg = r.type==='egg';
+      const ec = resultElemColor(r);
+      const cardCol = isEgg ? (RARITY_COLORS[r.dragon?.rarity||'heroic']||color) : ec;
+      const iconHtml = isEgg
+        ? `<div style="font-size:32px;line-height:1">🥚</div>`
+        : `${orbSVG(ec,36)}`;
+      const topLabel = isEgg ? 'EGG DROP' : `${orbCount(r.type)} ORBS`;
+      const botName  = r.dragon ? r.dragon.name : '';
+      const delay    = (i*0.05).toFixed(2);
+      return `<div class="multi-card" style="animation-delay:${delay}s;border-color:${cardCol}44;background:${cardCol}0d">
+        <div class="mc-icon">${iconHtml}</div>
+        <div class="mc-label" style="color:${cardCol}">${topLabel}</div>
+        <div class="mc-name">${botName}</div>
+      </div>`;
+    }).join('');
+    const eggs = batch.filter(r=>r.type==='egg').length;
+    content.innerHTML = `
+      <div class="multi-reveal">
+        <div class="multi-title">✦ ${count}× Pull Results — ${eggs} Egg${eggs!==1?'s':''} ✦</div>
+        <div class="multi-grid">${cards}</div>
+        <div class="tap-hint">TAP ANYWHERE TO CONTINUE</div>
+      </div>`;
+  }
+
+  if(batch.some(r=>r.isPityEgg)) showNotif('🥚 Pity guaranteed!','gold');
+}
+
+function closePullOverlay() {
+  document.getElementById('pull-overlay').classList.remove('show');
+  document.getElementById('pull-content').innerHTML='';
+  stopSunburst();
+}
+
+// ═══════════════ RENDER ═══════════════
+function renderAll() {
+  updateCurrencies(); renderPity(); renderPool(); renderStats(); renderHistory();
+}
+function updateCurrencies() {
+  document.getElementById('gems-count').textContent = S.gems.toLocaleString();
+  document.getElementById('keys-count').textContent = S.keys.toLocaleString();
+}
+function renderPity() {
+  const p = S.pity[S.gate];
+  document.getElementById('pity-val').textContent = p;
+  document.getElementById('pity-bar').style.width = Math.min(p/40*100,100)+'%';
+}
+function renderStats() {
+  document.getElementById('total-pulls').textContent = S.totalPulls.toLocaleString();
+  document.getElementById('total-eggs').textContent  = S.totalEggs.toLocaleString();
+  document.getElementById('total-orbs').textContent  = S.totalOrbs.toLocaleString();
+}
+function renderHistory() {
+  const area = document.getElementById('results-area');
+  const empty = document.getElementById('results-empty');
+  area.querySelectorAll('.result-batch').forEach(e=>e.remove());
+  if(S.history.length===0){ empty.style.display='flex'; return; }
+  empty.style.display='none';
+  S.history.forEach(batch=>{
+    const el = document.createElement('div');
+    el.className='result-batch';
+    const eggs = batch.results.filter(r=>r.type==='egg').length;
+    el.innerHTML=`<div class="rb-header"><span>${batch.count}× pull</span><span>${eggs?'🥚 '+eggs+' egg':'No eggs'}</span></div><div class="rb-grid"></div>`;
+    const grid = el.querySelector('.rb-grid');
+    batch.results.forEach(r=>{
+      const item=document.createElement('div');
+      const ec = r.dragon ? (ELEM_COLOR[r.dragon.element]||'#e2e8f0') : '#e2e8f0';
+      if(r.type==='egg'){
+        item.className='ri egg';
+        item.innerHTML=`🥚<div class="rl" style="color:${RARITY_COLORS[r.dragon?.rarity||'heroic']}">${r.dragon?.name||'Egg'}</div>`;
+      } else {
+        const count = r.type==='orbs100'?100:r.type==='orbs50'?50:10;
+        item.className='ri orb-item';
+        item.style.borderColor=ec+'55'; item.style.background=ec+'0d';
+        item.innerHTML=`<svg width="18" height="18" viewBox="0 0 32 32"><defs><radialGradient id="hg" cx="38%" cy="32%" r="55%"><stop offset="0%" stop-color="#fff" stop-opacity="0.5"/><stop offset="100%" stop-color="${ec}"/></radialGradient></defs><circle cx="16" cy="16" r="14" fill="url(#hg)"/></svg><div class="rl" style="color:${ec};font-weight:800">${count}</div><div class="rl">${r.dragon?.name||''}</div>`;
+      }
+      grid.appendChild(item);
+    });
+    area.appendChild(el);
+  });
+}
+function clearHistory(){ S.history=[]; renderHistory(); }
+
+// ═══════════════ GATE SWITCH ═══════════════
+function switchGate(gate) {
+  S.gate=gate;
+  S.poolType=gate;
+  document.querySelectorAll('.gate-tab').forEach(t=>t.classList.toggle('active',t.dataset.gate===gate));
+  const cfg=GATE_CONFIG[gate];
+  document.getElementById('gate-name').textContent=cfg.name;
+  document.getElementById('gate-sub').textContent=cfg.sub;
+  const b=document.getElementById('gate-badge');
+  b.textContent=cfg.badge; b.className='gate-badge '+cfg.bclass;
+  // pre-select first 6 dragons of the matching rarity
+  S.pool=ALL_DRAGONS.filter(d=>d.rarity===gate).slice(0,6).map(d=>d.id);
+  cIdx=0; renderPool(); renderPity();
+}
+
+// ═══════════════ CAROUSEL ═══════════════
+let cIdx=0, cTimer=null;
+const CAROUSEL_MS = 3200;
+
+function renderPool() {
+  document.getElementById('pool-count').textContent = S.pool.length+' / 6';
+  buildCarousel();
+}
+function buildCarousel() {
+  const stage=document.getElementById('carousel-stage');
+  const dotsEl=document.getElementById('carousel-dots');
+  // keep pool-count-pill
+  const pill=document.getElementById('pool-count');
+  stage.querySelectorAll('.carousel-slide').forEach(e=>e.remove());
+  dotsEl.innerHTML='';
+  const dragons=S.pool.map(id=>ALL_DRAGONS.find(d=>d.id===id)).filter(Boolean);
+  if(!dragons.length){
+    stage.innerHTML+='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;flex-direction:column;gap:8px"><span style="font-size:40px;opacity:.3">🐉</span>No dragons — add some!</div>';
+    return;
+  }
+  const recIdx = 0;
+  dragons.forEach((d,i)=>{
+    const slide=document.createElement('div');
+    slide.className='carousel-slide'+(i===cIdx?' active':'');
+    const col=RARITY_COLORS[d.rarity]||'#7c3aed';
+    // clean radial glow only — no rays
+    slide.style.background=`radial-gradient(ellipse 55% 60% at 50% 48%, ${col}22 0%, ${col}08 45%, transparent 75%)`;
+    const pipCount=PIP_COUNTS[d.rarity]||2;
+    const pips=Array(pipCount).fill(0).map(()=>`<div class="slide-pip pip-${d.rarity}"></div>`).join('');
+    const elemKeys=Object.keys(ELEM_ICONS);
+    const elemPips=elemKeys.map(k=>`<div class="elem-pip${k===d.element?' on':''}">${ELEM_ICONS[k]}</div>`).join('');
+    const rec=i===recIdx?'<div class="slide-rec">⭐ Recommended</div>':'';
+    slide.innerHTML=`
+      <div class="slide-pips">${pips}</div>
+      <div class="slide-rbadge ${d.rarity}">${RARITY_LABEL[d.rarity]}</div>
+      ${rec}
+      <div class="slide-emoji">${d.icon}</div>
+      <div class="slide-elem-row">${elemPips}</div>
+      <div class="slide-name">${d.name}</div>`;
+    slide.addEventListener('click',()=>carouselTo((i+1)%dragons.length));
+    stage.appendChild(slide);
+    const dot=document.createElement('div');
+    dot.className='cdot'+(i===cIdx?' active':'');
+    dot.addEventListener('click',()=>carouselTo(i));
+    dotsEl.appendChild(dot);
+  });
+  resetTimer(dragons.length);
+}
+function carouselTo(idx){
+  const slides=document.querySelectorAll('.carousel-slide');
+  const dots=document.querySelectorAll('.cdot');
+  if(!slides.length)return;
+  slides[cIdx]?.classList.remove('active');
+  dots[cIdx]?.classList.remove('active');
+  cIdx=(idx+slides.length)%slides.length;
+  slides[cIdx]?.classList.add('active');
+  dots[cIdx]?.classList.add('active');
+}
+function resetTimer(total){
+  clearInterval(cTimer);
+  if(total<2)return;
+  cTimer=setInterval(()=>carouselTo((cIdx+1)%document.querySelectorAll('.carousel-slide').length),CAROUSEL_MS);
+}
+
+// ═══════════════ POOL EDIT ═══════════════
+function openEditPool(){
+  S.pendingSel=[...S.pool];
+  renderPickerGrid(S.filterElem);
+  document.getElementById('edit-pool-modal').classList.add('open');
+}
+function renderPickerGrid(ef){
+  const grid=document.getElementById('dragon-picker-grid');
+  grid.innerHTML='';
+  // show only exact rarity for the current pool type
+  let list=ALL_DRAGONS.filter(d=>d.rarity===S.poolType);
+  if(ef!=='all') list=list.filter(d=>d.element===ef);
+  list.forEach(d=>{
+    const el=document.createElement('div');
+    el.className='picker-dragon'+(S.pendingSel.includes(d.id)?' selected':'');
+    el.innerHTML=`<div class="d-icon">${d.icon}</div><div class="d-name">${d.name}</div><div class="d-rar ${d.rarity}">${d.rarity.charAt(0).toUpperCase()+d.rarity.slice(1)}</div>`;
+    el.onclick=()=>toggleSel(d.id,el);
+    grid.appendChild(el);
+  });
+  updateSelInfo();
+}
+function toggleSel(id,el){
+  const i=S.pendingSel.indexOf(id);
+  if(i===-1){
+    if(S.pendingSel.length>=6){showNotif('Max 6 dragons!','red');return;}
+    S.pendingSel.push(id); el.classList.add('selected');
+  } else { S.pendingSel.splice(i,1); el.classList.remove('selected'); }
+  updateSelInfo();
+}
+function updateSelInfo(){
+  const n=S.pendingSel.length;
+  document.getElementById('selection-info').textContent=n+' / 6 selected';
+  document.getElementById('sel-count').textContent=n;
+}
+function filterElem(elem,btn){
+  S.filterElem=elem;
+  document.querySelectorAll('.elem-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPickerGrid(elem);
+}
+function confirmPoolEdit(){
+  if(!S.pendingSel.length){showNotif('Select at least 1!','red');return;}
+  S.pool=[...S.pendingSel]; cIdx=0;
+  closeModal('edit-pool-modal'); renderPool(); showNotif('Pool updated ✅','purple');
+}
+
+// ═══════════════ POOL TYPE ═══════════════
+function openChangePool(){
+  S.pendingPoolType=S.poolType;
+  document.querySelectorAll('.ptb').forEach(b=>b.classList.remove('selected'));
+  const i=['heroic','mythical','legendary'].indexOf(S.poolType);
+  document.querySelectorAll('.ptb')[i]?.classList.add('selected');
+  document.getElementById('change-pool-modal').classList.add('open');
+}
+function selectPoolType(type,el){
+  S.pendingPoolType=type;
+  document.querySelectorAll('.ptb').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function confirmPoolChange(){
+  S.poolType=S.pendingPoolType;
+  const cfg=GATE_CONFIG[S.poolType];
+  // pre-select only dragons whose rarity exactly matches the pool type
+  S.pool=ALL_DRAGONS.filter(d=>d.rarity===S.poolType).slice(0,6).map(d=>d.id);
+  cIdx=0; closeModal('change-pool-modal'); renderPool();
+  showNotif('Pool type: '+S.poolType+' ✅','purple');
+}
+
+// ═══════════════ PITY MODAL ═══════════════
+function openPityModal(){
+  const c=document.getElementById('pity-rewards');
+  c.innerHTML='';
+  S.pool.map(id=>ALL_DRAGONS.find(d=>d.id===id)).filter(Boolean).forEach(d=>{
+    c.innerHTML+=`<div class="pity-rrow"><div class="pri">${d.icon}</div><div><div class="prn">${d.name} Egg</div><div class="prd">${d.rarity} · ${d.element}</div></div><div style="margin-left:auto">🥚</div></div>`;
+  });
+  if(!S.pool.length) c.innerHTML='<div style="color:var(--text-muted);font-size:12px;">No dragons in pool.</div>';
+  document.getElementById('pity-modal').classList.add('open');
+}
+
+// ═══════════════ MODAL HELPERS ═══════════════
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',function(e){ if(e.target===this)closeModal(this.id); });
+});
+
+// ═══════════════ NOTIF ═══════════════
+let nTimer=null;
+function showNotif(msg,type='purple'){
+  const n=document.getElementById('notif');
+  n.textContent=msg; n.className='notif '+type+' show';
+  clearTimeout(nTimer); nTimer=setTimeout(()=>n.classList.remove('show'),2600);
+}
+
+// ═══════════════ INIT ═══════════════
+renderAll();
+</script>
+</body>
+</html>
